@@ -1,0 +1,229 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+.DATA
+string1 db 100 dup ('$') ;array for string input 
+string2 db 200 dup ('$')
+n1 dw 0
+n2 dw 0 
+line db 0ah, 0dh, '$'
+not_equal db 'Not equal $'
+equal db 'Equal $' 
+msg_small_string db 'String 2 is small $'
+msg_substring db 'is a substring $'
+msg_not_substring db 'not a substrig $'
+STOP dw 0  ;for substring
+START dw 0 ;for substring
+
+;MACROS
+print macro string;macro for printing string in dx
+    push dx
+    push ax 
+    lea dx, string
+    mov ah, 9
+    int 21h 
+    pop ax  
+    pop dx
+endm
+
+string_input macro string, count
+    LOCAL string_input, end_string_input
+    push ax
+    push bx
+    lea bx, string
+    mov count, 0
+    ;get string input untill enter is pressed
+    string_input:  
+    mov ah, 1
+    int 21h
+    cmp al, 0dh
+    je end_string_input
+    mov [bx], al
+    inc bx
+    inc count
+    jmp string_input
+    end_string_input:
+    
+    pop bx
+    pop ax
+endm
+
+string_equal macro string1, count1, string2, count2 
+    LOCAL unequal_string, for_string_equal, end_SE_macro
+    push ax
+    push bx
+    push si
+    push di
+    push cx
+    
+    lea si, string1
+    lea di, string2 
+    mov bx, count1
+    mov ax, count2
+    cmp bx, ax
+    ;if strings are of unequal length
+    jne unequal_string 
+    mov cx, count1
+    
+    for_string_equal:
+    cmpsb
+    jnz unequal_string    
+    loop for_string_equal 
+    ;else strings are equal
+    print line
+    print equal
+    jmp end_SE_macro
+    
+    unequal_string:
+    print line
+    print not_equal 
+    
+    end_SE_macro:
+    pop cx
+    pop di
+    pop si
+    pop bx
+    pop ax
+endm
+
+string_reverse macro string, count
+    push si
+    push di
+    push cx 
+    push ax
+    LOCAL XCHG_LOOP_REVERSE  
+    lea si, string
+    mov di, si
+    mov cx, count
+    add di, cx
+    dec di ;di points to end AND si points to start
+    shr cx, 1
+    XCHG_LOOP_REVERSE:
+        mov al, [si]
+        xchg al, [di]
+        mov [si], al
+        inc si
+        dec di        
+    loop XCHG_LOOP_REVERSE 
+    
+    pop ax
+    pop cx
+    pop di
+    pop si
+endm
+
+
+palindrome macro string1, count1, string2, count2
+    string_reverse string1, count1
+    string_equal string1, n1, string2, n2
+endm
+
+copy_string macro string1, count1, string2, count2
+    ;copies count1 characters of string1 into string2   
+    push si
+    push di
+    push cx  
+    LOCAL loop_copy_string
+    lea si, string1
+    lea di, string2
+    mov cx, count1
+    loop_copy_string:
+    movsb   
+    inc count2 
+    loop loop_copy_string
+    pop cx
+    pop di
+    pop si
+
+endm
+
+substring macro string1, count1, string2, count2
+    LOCAL notSS,repeatSS, yesSS, endSS    
+    push ax
+    push bx
+    push si
+    push di
+    push cx
+    
+    mov bx, count1
+    cmp bx, 0
+    je notSS
+    cmp count2, 0
+    je notSS
+    cmp count2, bx
+    jg notSS
+    
+    ;see if string2 is substring 
+    lea si, string2
+    lea di, string1
+    cld
+    
+    mov STOP, di
+    add STOP, bx
+    mov cx, count2
+    sub STOP, cx
+    
+    mov START, di
+    repeatSS:
+        mov cx, count2
+        mov di, START
+        lea si, string2
+        rep cmpsb
+        je yesSS
+        ;substring not found yet
+        inc START  
+        ;see if start <= stop
+        mov ax, start
+        cmp ax, stop
+        jnle notSS
+        jmp repeatSS       
+    yesSS: 
+        print line
+        print msg_substring  
+        jmp endSS 
+    notSS:  
+        print line
+        print msg_not_substring 
+    endSS:
+    
+    pop cx
+    pop di
+    pop si
+    pop bx
+    pop ax
+endm
+
+findLength macro string, count
+    local while, end
+    
+    lea si, string
+    while:
+        cmp [si], '$'
+        je end
+        inc count
+    jmp while
+    end:
+    endm
+.CODE 
+MOV AX, @DATA
+MOV DS, AX
+MOV ES, AX
+
+string_input string1, n1
+;copy_string string1, n1, string2, n2
+print line
+;print string2
+string_input string2, n2
+;string_equal string1, n1, string2, n2
+substring string1, n1, string2, n2
+;palindrome string1, n1, string2, n2
+
+
+ret
+
+
+
+
