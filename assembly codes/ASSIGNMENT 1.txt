@@ -1,0 +1,73 @@
+
+org 100h
+
+; add your code here    
+
+.data
+count dw 0
+msg_enter db 0ah, 0dh, "Enter: $"
+msg_smallest db 0ah, 0dh, "Smallest: $"
+msg_largest db 0ah, 0dh , "Largest: $"
+max dw 0
+min dw 0
+.code
+mov ah, 9
+lea dx, msg_enter
+int 21h
+mov ah, 1
+int 21h
+while:
+cmp al, 0dh
+je end_while
+push ax
+inc count
+int 21h
+jmp while
+end_while:
+
+call function
+
+ret
+
+function proc  
+    
+cmp count, 0
+je end
+pop max
+mov bx, max
+mov min, bx
+mov cx, count
+for:
+pop dx
+cmp max, dx
+jl replace_max
+jmp next
+replace_max:
+    mov max, dx
+next:
+cmp min, dx
+jg replace_min
+jmp next1
+replace_min:
+    mov min, dx
+next1:   
+loop for
+
+mov ah, 9
+lea dx, msg_smallest
+int 21h
+mov ah, 2
+mov dx, min
+int 21h
+
+mov ah, 9
+lea dx, msg_largest
+int 21h
+mov ah, 2
+mov dx, max
+int 21h
+end:                        
+ret
+function endp
+
+

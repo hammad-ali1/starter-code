@@ -1,0 +1,97 @@
+org 100h
+
+.DATA
+binary_input dw 0
+bit14 dw 0
+bit15 dw 0
+.CODE  
+
+main proc 
+    call read
+    mov cx, 10
+    for2:   
+    call random
+    call write 
+    loop for2
+    ret
+main endp
+
+random proc
+    mov bx, ax 
+    and bx, 0002h ;preserve only 14 bit 
+    shr bx, 1
+    mov bit14, bx 
+    
+    mov bx, ax 
+    and bx, 0001h ;preserve only 15 bit
+    mov bit15, bx
+    
+    mov bx, bit15
+    xor bit14, bx;mov xor to carry flag
+    shr bit14, 1
+    
+    pushf ;save flags values
+    
+    and ax, 0fffch ;clear 14 and 15 bit in ax 
+    
+    popf ;recover flags values
+    rcr ax, 1 ;mov carry flag into ax
+    
+    ret
+random endp    
+
+read proc 
+    push cx ;save cx
+    mov binary_input, 0
+    
+    mov cx, 16
+    
+    for:
+    mov ah, 1
+    int 21h
+    and ax, 0fh
+    shl binary_input, 1
+    or binary_input, ax
+    
+    loop for 
+    mov ax, binary_input
+  
+    pop cx ;recover cx
+    ret
+read endp
+
+write proc  
+    push cx ; save cx
+    push ax ; save ax
+    
+    mov binary_input, ax
+    mov cx, 16
+    mov ah, 2
+    ;print next line
+    mov dl, 0dh
+    int 21h
+    mov dl, 0ah
+    int 21h
+    for1:
+    rol binary_input, 1
+    jc ONE
+        mov dl,30h
+        int 21h
+        jmp skip
+    ONE:
+        mov dl, 31h
+        int 21h
+    SKIP:    
+    loop for1
+    
+    pop ax ;recover ax
+    pop cx ;recover cx
+    ret
+write endp    
+
+
+
+
+ 
+
+

@@ -1,0 +1,85 @@
+org 100h
+
+.DATA
+sum db 0
+diff db 0 
+msg1 db 0ah, 0dh, "SUM IS: ", 0ah, 0dh, "$"
+msg2 db 0ah, 0dh, "DIFFERENCE IS: ", 0ah, 0dh, "$"
+
+.CODE  
+
+xor bx, bx
+mov cl, 4 
+mov ah, 1
+;HEX INPUT
+for:
+    int 21h
+    cmp al, 39h
+    jg letter
+    and al, 0fh
+    jmp shift
+    letter:
+        sub al, 37h
+    shift:
+        shl bx, 1
+        shl bx, 1
+        shl bx, 1
+        shl bx, 1
+    or bl, al
+    loop for    
+
+mov sum, bh
+add sum, bl
+
+mov diff, bh
+sub diff, bl
+
+;DISPLAY SUM  
+mov ah, 9
+mov dx, offset msg2
+int 21h
+mov cx, 2
+mov ah, 2
+for1:
+    push cx
+    mov dl, sum
+    mov cl, 4
+    shr dl, cl
+  
+    cmp dl, 9
+    jg letter1
+        or dl, 00110000b 
+        jmp endIF1
+    letter1:
+        add dl, 37h    
+    endIF1:                
+    int 21h
+    rol sum, cl           
+    pop cx
+loop for1   
+
+;DISPLAY DIFFERENCE  
+mov ah, 9
+mov dx, offset msg2
+int 21h
+mov cx, 2
+mov ah, 2
+for2:
+    push cx
+    mov dl, diff
+    mov cl, 4
+    shr dl, cl
+  
+    cmp dl, 9
+    jg letter2
+        or dl, 00110000b 
+        jmp endIF2
+    letter2:
+        add dl, 37h    
+    endIF2:                
+    int 21h
+    rol diff, cl           
+    pop cx
+loop for2
+
+ret

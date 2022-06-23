@@ -1,0 +1,90 @@
+org 100h
+
+.DATA
+msg1 db 0ah, 0dh, "MAXIMUM IS: $"
+msg2 db 0ah, 0dh, "MINIMUM IS: $"
+
+.CODE  
+
+xor bx, bx
+mov ah, 1
+int 21h
+mov cx, 16
+
+for:
+and al, 0fh
+shl bx, 1
+or bl, al
+int 21h
+loop for
+
+mov dh, bl
+add dh, bh ; contains sum of bh and bl
+;add bh, bl
+ 
+;output dh in binary
+mov cx, 8
+mov ah, 2
+;print next line
+mov dl, 0dh
+int 21h
+mov dl, 0ah
+int 21h
+for1:
+rol dh, 1
+jc ONE
+    mov dl,30h
+    int 21h
+    jmp skip
+ONE:
+    mov dl, 31h
+    int 21h
+SKIP:    
+loop for1
+
+cmp bh, bl
+ja DISPLAY
+xchg bh, bl  
+
+DISPLAY:
+
+;output maximum in binary
+mov cx, 8
+mov ah, 9
+mov dx, offset msg1
+int 21h
+mov ah, 2
+for2:
+rol bh, 1
+jc ONE2
+    mov dl,30h
+    int 21h
+    jmp skip2
+ONE2:
+    mov dl, 31h
+    int 21h
+SKIP2:    
+loop for2
+
+;output minimum in binary
+mov cx, 8
+mov ah, 9
+mov dx, offset msg2
+int 21h
+mov ah, 2
+for3:
+rol bl, 1
+jc ONE3
+    mov dl,30h
+    int 21h
+    jmp skip3
+ONE3:
+    mov dl, 31h
+    int 21h
+SKIP3:    
+loop for3
+
+
+
+
+ret

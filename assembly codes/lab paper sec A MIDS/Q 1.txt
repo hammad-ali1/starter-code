@@ -1,0 +1,118 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+; add your code here   
+.data
+num dw 12  
+count dw 0  
+A dw 10
+B dw 20
+C dw 18
+D dw 18
+msg_A db 0ah, 0dh, 'Value of A = $'
+msg_B db 0ah, 0dh, 'Value of B = $'
+msg_C db 0ah, 0dh, 'Value of C = $'
+msg_D db 0ah, 0dh, 'Value of D = $'
+.code
+
+main proc
+    mov ax, a
+    cmp ax, b
+    jge end_main 
+    mov ax, b
+    cmp ax, c
+    jle end_main
+    mov ax, c
+    cmp ax, d
+    jl end_main
+    
+    ;2A
+    mov bx, a
+    shl bx, 1
+    ;Add B
+    add bx, b
+    ;SUB C
+    sub bx, c
+    ;ADD 4C
+    mov ax, c
+    mov cl, 2
+    shl ax, cl
+    add bx, ax
+    ;ADD 6D
+    mov ax, d
+    mov cx, 6
+    mul cx
+    add bx, ax
+    
+    ;mov to A
+    mov a, bx
+    
+    mov ah, 9
+    lea dx, msg_A
+    int 21h  
+    mov bx, A      
+    mov num, bx
+    call display_num 
+    
+    mov ah, 9
+    lea dx, msg_B
+    int 21h  
+    mov bx, B
+    mov num, bx
+    call display_num
+    
+    mov ah, 9
+    lea dx, msg_C
+    int 21h  
+    mov bx, C      
+    mov num, bx
+    call display_num 
+    
+    end_main:    
+    ret
+main endp           
+
+display_num proc 
+    ;save registers
+    push ax  
+    push bx  
+    push dx
+    push count
+    mov ax, num
+    cwd
+    mov bx, 10  
+    mov count, 0
+    while: 
+        cmp ax, 0
+        je end_while
+        div bx 
+        push dx 
+        cwd 
+        inc count
+        jmp while
+    end_while:
+    mov cx, count
+    mov ah, 2 
+    for:
+        pop dx
+        
+        add dl, 30h
+        int 21h
+    loop for
+    ;recover registers
+    pop count
+    pop dx
+    pop bx
+    pop ax
+    ret
+    
+display_num endp      
+
+ret
+
+
+
+

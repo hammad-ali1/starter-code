@@ -1,0 +1,187 @@
+;HAMMAD ALI
+;FA20-BCS-087
+;SECTION B
+;QUIZ 3
+
+org 100h
+
+.data
+string db 100 dup ('$') ;array for string input
+msg_input db 0ah, 0dh, 'Input: $'
+msg_even db 0ah, 0dh, 'Even Number: $'
+msg_odd db 0ah, 0dh, 'Odd Number: $' 
+msg_illegal db 0ah, 0dh, 'llegal$'
+msg_power db 0ah, 0dh, 'Power of Two: $' 
+msg_string db 0ah, 0dh, 'String: $'
+msg_vowels db 0ah,0dh,'VOWELS: $'
+num dw 0 ;parameter variable for display_num proc
+count dw 0  ;counts number of digits in display_num proc
+vowel_count dw 0
+ 
+
+
+print macro ;macro for printing string in dx
+    push ax
+    mov ah, 9
+    int 21h
+    pop ax
+endm 
+
+
+.code
+again:
+mov dx, offset msg_input
+print
+mov ah, 1 
+int 21h
+cmp al, 30h ;character less than 0 (illegal)
+jl illegal
+cmp al, 39h  ;character less than 9 (decimal)
+jle decimal:
+cmp al, 41h  ;character less than A (illegal)
+jl illegal
+cmp al, 5Ah   ;character less than Z (string)
+jle character
+cmp al, 61h   ;character less than a (illegal)
+jl illegal
+cmp al, 7Ah   ;character less than z (string)
+jle character  
+jmp illegal
+
+;first character entered was between 0 to 9
+decimal:
+sub al, 30h
+;check for even or odd
+test al, 1h
+jz even
+mov dx, offset msg_odd
+print
+jmp power
+even:
+mov dx, offset msg_even
+print
+;calculate and display power of two
+power:
+mov dx, offset msg_power
+print
+mov ah, 0
+mul al
+mov num, ax
+call display_num
+jmp end
+
+;first character entered was between A to Z or a to z
+character:
+lea bx, string
+mov [bx], al
+inc bx
+;get string input untill enter is pressed
+string_input:
+int 21h
+cmp al, 0dh
+je end_input
+mov [bx], al
+inc bx
+jmp string_input
+end_input: 
+call count_vowels 
+mov dx, offset msg_vowels
+print
+mov ax,vowel_count 
+mov num, ax
+call display_num
+jmp end
+
+;first character entered was illegal
+illegal:  
+mov dx, offset msg_illegal
+print
+jmp again ;enter again
+end:
+
+ret
+  
+  
+  
+display_num proc  ;decimal output of number stored in num variable
+    ;save registers
+    push ax  
+    push bx  
+    push dx
+    push count
+    mov ax, num
+    cwd
+    mov bx, 10  
+    mov count, 0
+    while: 
+        cmp ax, 0
+        je end_while
+        div bx 
+        push dx 
+        cwd 
+        inc count
+        jmp while
+    end_while:
+    mov cx, count
+    mov ah, 2
+     
+    for:
+        pop dx
+        
+        add dl, 30h
+        int 21h 
+        jcxz end_for
+    loop for
+    end_for:
+    ;recover registers
+    pop count
+    pop dx
+    pop bx
+    pop ax
+    ret
+    
+display_num endp    
+
+
+
+count_vowels proc
+   push bx    
+   push ax
+   lea bx, string 
+   while2:
+   cmp [bx], '$' 
+   je exit2
+   
+   cmp [bx], 'A'
+    je vowel
+    cmp [bx], 'E'
+    je vowel
+    cmp [bx], 'I'
+    je vowel
+    cmp [bx], 'O'
+    je vowel
+    cmp [bx], 'U'
+    je vowel   
+    cmp [bx], 'a'
+    je vowel
+    cmp [bx], 'e'
+    je vowel
+    cmp [bx], 'i'
+    je vowel
+    cmp [bx], 'o'
+    je vowel
+    cmp [bx], 'u'
+    je vowel
+    jmp not_vowel 
+    vowel:
+    inc vowel_count 
+   not_vowel: 
+ 
+   inc bx
+   jmp while2
+   
+   exit2:
+   pop ax
+   pop bx 
+   ret 
+   count_vowels endp 

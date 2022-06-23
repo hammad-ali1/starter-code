@@ -1,0 +1,151 @@
+org 100h
+
+.data
+string db 100 dup ('$') ;array for string input
+enter db 'Enter: $'
+firstCapital db 'First Capital: $'
+lastCapital db 'Last Capital: $'
+reverse db 'Reverse: $'
+line db 0ah, 0dh, '$' 
+noLetter db 'No Capital Letters$'
+firstLetter db ?
+lastLetter db ?    
+TEMP DW ?
+print macro string;macro for printing string in dx
+    push dx
+    push ax 
+    lea dx, string
+    mov ah, 9
+    int 21h 
+    pop ax  
+    pop dx
+endm
+
+findSpace macro 
+    local whileSpace  
+    whileSpace:
+    cmp [bx], ' '
+    je endSpace 
+    cmp [bx], '$'
+    je endSpace
+    inc bx
+    jmp whileSpace
+    endSpace:
+    endm
+
+.code 
+print enter 
+
+lea bx, string
+;get string input untill enter is pressed
+string_input:  
+mov ah, 1
+int 21h
+cmp al, 0dh
+je end_input
+mov [bx], al
+inc bx
+jmp string_input
+end_input:
+
+call capitalLetter
+call reverseWord
+print line
+print string  
+ret
+
+capitalLetter proc 
+    push bx
+    push cx
+    lea bx, string
+    
+    while1: ;loop till $ is reached  
+    cmp [bx], '$'
+    je end_while1
+    cmp [bx], 41h
+    jg next:
+    inc bx
+    jmp while1
+    next:
+    cmp [bx], 5Ah
+    jl capitalFound
+    inc bx   
+    jmp while1 
+    end_while1:
+    print line
+    print noLetter
+    ret
+    
+    capitalFound:
+    mov cl, [bx]
+    mov firstLetter, cl
+    mov cl, [bx]
+    mov lastLetter, cl
+    while2: ;loop till $ is reached
+    cmp [bx], '$'
+    je end_while2
+    
+    mov cl, [bx]
+    cmp cl, ' '
+    je skip2
+    cmp cl, firstLetter
+    jge skip1
+    mov cl, [bx]
+    mov firstLetter, cl
+    skip1: 
+    mov cl, [bx]
+    cmp cl, lastLetter
+    jle skip2 
+    mov cl, [bx]
+    mov lastLetter, cl
+    skip2: 
+    inc bx
+    jmp while2 
+    end_while2:
+    print line
+    print firstCapital
+    mov ah, 2
+    mov dl, firstLetter
+    int 21h
+    print line
+    print lastCapital
+    mov ah, 2
+    mov dl, lastLetter
+    int 21h  
+    pop cx
+    pop bx
+    ret
+    endp
+
+
+reverseWord proc 
+    lea bx, string
+    mov TEMP, bx
+    whileEnd:
+    cmp [bx], '$'
+    je endReverse
+    mov si, TEMP
+    mov bx, TEMP
+    findSpace
+    mov TEMP, bx
+    INC TEMP  
+    MOV CX, BX
+    SUB CX, SI
+    mov di, si
+  
+    add di, CX
+    DEC DI  
+    shr cx, 1 
+    xchg_loop:
+    mov al, [si]
+    xchg al, [di]
+    mov [si], al
+    inc si
+    dec di
+    loop xchg_loop
+     
+    jmp whileEnd
+    endReverse: 
+    ret
+    endp
+

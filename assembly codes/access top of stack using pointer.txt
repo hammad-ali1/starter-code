@@ -1,0 +1,22 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+.data
+msg db "ABCDEFGH"
+.code
+; add your code here 
+push 10h   
+mov bx, sp
+mov ax, [bx]
+mov al, msg
+mov al, [msg + 1]
+
+mov ah, 4ch
+int 21h
+
+
+
+

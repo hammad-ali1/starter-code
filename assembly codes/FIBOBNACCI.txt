@@ -1,0 +1,157 @@
+
+
+org 100h
+
+; add your code here  
+                       
+.data
+input db "Enter a number: $"
+line db 0ah, 0dh, '$'
+output db "fibonacci term is: $"
+
+print macro string;macro for printing string in dx
+    push dx
+    push ax 
+    lea dx, string
+    mov ah, 9
+    int 21h 
+    pop ax  
+    pop dx
+endm 
+decimal_ouptut macro num
+    ;save registers 
+    local DO_while, DO_end_while, DO_for, DO_end_for
+    push ax  
+    push bx  
+    push dx 
+    push cx   
+    mov ax, num
+    cwd
+    mov bx, 10  
+    mov cx, 0
+    DO_while: 
+        cmp ax, 0
+        je DO_end_while
+        div bx 
+        push dx 
+        cwd 
+        inc cx
+        jmp DO_while
+    DO_end_while:
+    mov ah, 2
+    DO_for:
+        pop dx
+        add dl, 30h
+        int 21h 
+        jcxz DO_end_for
+    loop DO_for
+    DO_end_for:
+    ;recover registers
+    pop cx
+    pop dx
+    pop bx
+    pop ax
+endm
+
+decimal_input macro 
+    local DI_while, DI_end_while
+    push bx   ;stores current digit
+    push cx  ;stores result
+    push dx      
+    mov cx, 0                  
+    DI_while: 
+    mov ah, 1
+    int 21h
+    cmp al, 0dh
+    je DI_end_while     
+    and ax, 0fh
+    mov bx, ax
+    mov ax, cx 
+    mov dx, 10
+    mul dx
+    add ax, bx
+    mov cx, ax
+    jmp DI_while
+    DI_end_while: 
+    mov ax, cx ; now ax contains final result
+    pop dx
+    pop cx
+    pop bx
+    endm   
+.code 
+MAIN PROC 
+print input
+decimal_input
+print line 
+push ax
+call fibonacci
+print output
+decimal_ouptut ax
+MAIN ENDP
+ret  
+
+PF PROC   ;product fibonacci
+      PUSH BP
+      MOV BP, SP
+      PUSH BX
+      PUSH CX
+      MOV BX, [BP+4]
+BASECASE0:
+       CMP BX, 0
+       JNE BASECASE1
+       MOV AX, 1
+       JMP EXITPF
+BASECASE1:
+       CMP BX, 1
+       JNE RECURSIVE
+       MOV AX, 2
+       JMP EXITPF
+RECURSIVE:
+       DEC BX
+       PUSH BX
+       CALL PF
+       MOV CX, AX
+       DEC BX
+       PUSH BX
+       CALL PF
+       MUL CX
+EXITPF:
+       POP CX
+       POP BX
+       POP BP
+       RET 2
+PF ENDP
+
+fibonacci proc
+    push bp
+    mov bp, sp
+    push bx   
+    push cx
+    mov bx, bp[4] ;parameter passed
+basecaseZero:
+    cmp bx, 0
+    jne basecaseOne
+    mov ax, 0 ;result is 0
+    jmp return_fibbonacci
+basecaseOne:
+    cmp bx, 1 
+    jne recursion
+    mov ax, 1
+    jmp return_fibbonacci
+recursion:
+    dec bx
+    push bx
+    call fibonacci ;call for n-1  
+    mov cx, ax ;result in cx
+    dec bx
+    push bx 
+    call fibonacci ;call for n-2
+    add ax, cx ;add result of n-1 and n-2
+    return_fibbonacci:
+    pop cx           
+    pop bx
+    pop bp
+    ret 2           
+fibonacci endp
+
+

@@ -1,0 +1,44 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+.data
+batch db 4 dup 0
+msg_input db 'Enter your batch: $'
+new_line db 0ah, 0dh, '$' 
+.code   
+
+mov ah, 9
+lea dx, msg_input
+int 21h
+
+mov cx, 4
+mov ah, 1  
+lea bx, batch
+for:
+    int 21h   
+    mov [bx], al
+    inc bx
+loop for 
+
+
+mov ah, 9
+lea dx, new_line
+int 21h
+ 
+mov cx, 4
+mov ah, 2 
+lea bx, batch
+for2:
+    
+    mov dl, [bx] 
+    int 21h 
+    inc bx
+loop for2
+ret
+
+
+
+

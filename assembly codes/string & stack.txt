@@ -1,0 +1,172 @@
+org 100h
+
+.data   
+
+count dw 0
+msg_enter db 0ah, 0dh, "Enter a string: ",  0ah, 0dh, "$"    
+msg_reverse db 0ah, 0dh, "Reversed String: ",  0ah, 0dh, "$"
+msg_convert db 0ah, 0dh, "Converted String: ",  0ah, 0dh, "$" 
+msg_consonants db 0ah, 0dh, "Total Number of Consonants: ",  0ah, 0dh, "$"
+new_line db 0ah, 0dh, "$"
+ 
+func_ret dw 0 
+.code
+
+main proc
+;call input_print_string
+;call convert
+call  consonants   
+
+ret 
+main endp 
+
+input_print_string proc
+mov count, 0
+mov ah, 9
+mov dx, offset msg_enter
+int 21h
+
+mov ah, 1
+int 21h
+
+mov func_ret, sp
+mov bx, sp  ;store initial value of sp
+sub bx, 2
+
+while:
+cmp al, 0dh
+je end_while 
+push ax
+inc count   
+int 21h
+jmp while
+end_while:
+
+mov ah, 9
+mov dx, offset msg_reverse
+int 21h
+
+mov cx, count  
+mov ah, 2 
+mov sp, bx ;change sp before printing
+for:
+pop dx
+sub sp, 4 ;decrement sp pointer
+int 21h
+loop for
+
+mov sp, func_ret   ;for ret to work
+    
+ret
+input_print_string endp
+
+convert proc
+mov count, 0
+mov ah, 9
+mov dx, offset msg_enter
+int 21h
+
+mov ah, 1
+int 21h
+
+mov func_ret, sp
+mov bx, sp  ;store initial value of sp
+sub bx, 2
+
+while1:
+cmp al, 0dh
+je end_while1 
+push ax
+inc count   
+int 21h
+jmp while1
+end_while1: 
+
+mov ah, 9
+mov dx, offset msg_convert
+int 21h
+
+mov cx, count  
+mov ah, 2
+mov sp, bx ;change sp before printing
+for1:
+pop dx  
+sub sp, 4 ;decrement sp pointer
+cmp dl, 61h
+jl skip
+sub dl, 20h 
+int 21h
+skip:
+loop for1
+
+mov sp, func_ret   ;for ret to work    
+ret
+convert endp
+
+
+
+
+consonants proc
+
+mov count, 0 
+mov bl, 0
+mov ah, 9
+mov dx, offset msg_enter
+int 21h
+
+mov ah, 1
+int 21h
+
+while3:
+cmp al, 0dh
+je end_while3 
+push ax
+inc count   
+int 21h
+jmp while3
+end_while3: 
+
+mov ah, 9
+mov dx, offset msg_consonants
+int 21h
+
+mov cx, count  
+mov ah, 2
+for3:
+pop dx
+cmp dl, 'a'
+je skip3
+cmp dl, 'e'
+je skip3
+cmp dl, 'i'
+je skip3
+cmp dl, 'o'
+je skip3
+cmp dl, 'u'
+je skip3
+cmp dl, 'A'
+je skip3
+cmp dl, 'E'
+je skip3
+cmp dl, 'I'
+je skip3
+cmp dl, 'O'
+je skip3
+cmp dl, 'U'
+cmp dl, ' '
+je skip3
+
+
+inc bl
+
+skip3:
+loop for3
+
+mov dl, bl
+add dl, 30h
+mov ah, 2
+int 21h 
+   
+    
+ret
+consonants endp

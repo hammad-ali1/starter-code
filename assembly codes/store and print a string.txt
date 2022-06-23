@@ -1,0 +1,61 @@
+org 100h
+
+.data   
+
+count dw 0
+msg_enter db 0ah, 0dh, "Enter a string: ",  0ah, 0dh, "$"    
+msg_reverse db 0ah, 0dh, "Reversed String: ",  0ah, 0dh, "$"
+msg_convert db 0ah, 0dh, "Converted String: ",  0ah, 0dh, "$" 
+msg_consonants db 0ah, 0dh, "Total Number of Consonants: ",  0ah, 0dh, "$"
+new_line db 0ah, 0dh, "$"
+ 
+func_ret dw 0 
+.code
+
+main proc
+call input_print_string
+  
+
+ret 
+main endp 
+
+input_print_string proc
+mov func_ret, sp
+mov count, 0
+mov ah, 9
+mov dx, offset msg_enter
+int 21h
+
+mov ah, 1
+int 21h
+
+
+while:
+cmp al, 0dh
+je end_while 
+push ax
+inc count   
+int 21h
+jmp while
+end_while:
+
+mov ah, 9
+mov dx, offset msg_reverse
+int 21h
+
+mov cx, count  
+mov ah, 2 
+mov bx, sp ;change sp before printing 
+add bx, count; + count; - 2
+add bx, count
+sub bx, 2
+for:
+mov dx, [bx]
+int 21h  
+sub bx, 2
+loop for
+
+mov sp, func_ret   ;for ret to work
+    
+ret
+input_print_string endp

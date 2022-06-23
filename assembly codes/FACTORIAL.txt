@@ -1,0 +1,113 @@
+
+
+org 100h
+
+; add your code here  
+                       
+.data
+input db "Enter a number: $"
+line db 0ah, 0dh, '$'
+output db "Your factorial is: $"
+
+print macro string;macro for printing string in dx
+    push dx
+    push ax 
+    lea dx, string
+    mov ah, 9
+    int 21h 
+    pop ax  
+    pop dx
+endm 
+decimal_ouptut macro num
+    ;save registers 
+    local DO_while, DO_end_while, DO_for, DO_end_for
+    push ax  
+    push bx  
+    push dx 
+    push cx   
+    mov ax, num
+    cwd
+    mov bx, 10  
+    mov cx, 0
+    DO_while: 
+        cmp ax, 0
+        je DO_end_while
+        div bx 
+        push dx 
+        cwd 
+        inc cx
+        jmp DO_while
+    DO_end_while:
+    mov ah, 2
+    DO_for:
+        pop dx
+        add dl, 30h
+        int 21h 
+        jcxz DO_end_for
+    loop DO_for
+    DO_end_for:
+    ;recover registers
+    pop cx
+    pop dx
+    pop bx
+    pop ax
+endm
+
+decimal_input macro 
+    local DI_while, DI_end_while
+    push bx   ;stores current digit
+    push cx  ;stores result
+    push dx      
+    mov cx, 0                  
+    DI_while: 
+    mov ah, 1
+    int 21h
+    cmp al, 0dh
+    je DI_end_while     
+    and ax, 0fh
+    mov bx, ax
+    mov ax, cx 
+    mov dx, 10
+    mul dx
+    add ax, bx
+    mov cx, ax
+    jmp DI_while
+    DI_end_while: 
+    mov ax, cx ; now ax contains final result
+    pop dx
+    pop cx
+    pop bx
+    endm   
+.code 
+MAIN PROC 
+print input
+decimal_input
+print line 
+push ax
+call factorial
+print output
+decimal_ouptut ax
+MAIN ENDP
+ret  
+
+factorial proc  ;takes parameter in ax variable and returns result in ax
+    push bp
+    mov bp, sp
+    cmp bp[4], 1
+    jg factorial_again
+    mov ax, 1
+    jmp return_factorial
+    
+    factorial_again: ;prepare parameters for next call
+    mov bx, bp[4]
+    dec bx
+    push bx
+    call factorial ;call function again
+    mul bp[4] ;actual operation done here
+    return_factorial: 
+    pop bp
+    ret 2
+factorial endp
+
+
+

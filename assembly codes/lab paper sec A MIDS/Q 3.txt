@@ -1,0 +1,53 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+org 100h
+
+; add your code here 
+.data
+A db 2
+B db 3
+product db 0
+msg_product db 'Product is: $'
+
+.code
+main proc
+    call find_product
+    mov ah, 9 
+    lea dx, msg_product
+    int 21h
+    mov dl, product 
+    add dl, 30h
+    mov ah, 2
+    int 21h
+    ret  
+main endp
+
+find_product proc 
+    push ax
+    
+    mov al, A
+    while:
+        cmp B, 0
+        je end_while
+        
+        test B, 1h
+        jz skip
+        add product, al     
+        skip:
+        shl al, 1
+        shr B, 1
+    jmp while
+    end_while:
+     
+    pop ax
+    ret
+find_product endp
+
+
+
+
+
+
+
